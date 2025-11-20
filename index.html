@@ -14,8 +14,9 @@ width: 15%;
 	<h1>请选择以下任意地址下载蓝岛App</h1>
 	<h2>　请记住蓝岛发布页地址：<a href="https://landao.app">landao.app</a> </h2></br></br>
 	<h2><a href="https://landao.app/latest">下载地址1</a> 　　　
-		<a href="https://cf.landao.app/landao_0.25.11.19.apk">下载地址2</a> 　　　
-		<a href="https://gh.landao.app/landao_0.25.11.19.apk">下载地址3</a>  </h2>
+		<a id="cfLink"></a> 　　　
+		<a id="ghLink"></a>  
+	</h2>
     </br> </br><br>
     <h2>　　　　　❤️ <a href="https://landao.app/sponsor" target="_blank">赞助 & 支持蓝岛</a></h2>
 	
@@ -26,5 +27,50 @@ width: 15%;
 			</a>
 		</div>
 		
+<script>
+// ============ 你只需要改下面这五行 ============
+const OWNER = "Loyea";
+const REPO  = "LandaoArchives";
+const PATH  = "";   // apk 所在路径，根目录留空，子文件夹写 "dist/"
+// ============================================
+
+
+const ghLink = document.getElementById('ghLink');
+const cfLink = document.getElementById('cfLink');
+
+fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}?t=${Date.now()}`)
+  .then(r => r.json())
+  .then(files => {
+    if (!Array.isArray(files)) throw "API 返回异常";
+
+    const apkFiles = files.filter(f => f.name.endsWith('.apk')).map(f => f.name);
+    if (apkFiles.length === 0) throw "没找到 .apk 文件";
+
+    // 支持四位版本号排序
+    const latest = apkFiles.sort((a, b) => {
+      const va = a.match(/(\d+\.\d+\.\d+\.\d+)/)?.[1] || "0.0.0.0";
+      const vb = b.match(/(\d+\.\d+\.\d+\.\d+)/)?.[1] || "0.0.0.0";
+      const pa = va.split('.').map(Number);
+      const pb = vb.split('.').map(Number);
+      for (let i = 0; i < 4; i++) {
+        if (pa[i] > pb[i]) return -1;
+        if (pa[i] < pb[i]) return 1;
+      }
+      return 0;
+    })[0];
+
+    // 成功：显示版本号 + 两个真实下载链接
+    cfLink.href = `https://cf.landao.app/${latest}`;   // Cloudflare Pages 镜像路径必须和 GitHub 一致！
+    cfLink.textContent = "下载地址2";
+
+    ghLink.href = `https://gh.landao.app/${latest}`;
+    ghLink.textContent = "下载地址3";
+  })
+  .catch(err => {
+    console.error(err);
+  });
+
+
+</script>
 </body>
 </html>
